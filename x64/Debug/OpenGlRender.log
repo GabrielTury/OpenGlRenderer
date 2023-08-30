@@ -1,0 +1,9 @@
+﻿Application.obj : error LNK2019: símbolo externo não resolvido, glfwInit, referenciado na função main
+Application.obj : error LNK2019: símbolo externo não resolvido, glfwTerminate, referenciado na função main
+Application.obj : error LNK2019: símbolo externo não resolvido, glfwCreateWindow, referenciado na função main
+Application.obj : error LNK2019: símbolo externo não resolvido, glfwWindowShouldClose, referenciado na função main
+Application.obj : error LNK2019: símbolo externo não resolvido, glfwPollEvents, referenciado na função main
+Application.obj : error LNK2019: símbolo externo não resolvido, glfwMakeContextCurrent, referenciado na função main
+Application.obj : error LNK2019: símbolo externo não resolvido, glfwSwapBuffers, referenciado na função main
+C:\Users\intel\Documents\Gabriel\Estudos\C++\OpenGlStudies\OpenGlRender\\Dependencies\GLFW\lib-vc2022\glfw3.lib : warning LNK4272: o tipo de máquina da biblioteca 'x86' está em conflito com o tipo de máquina de destino 'x64'
+C:\Users\intel\Documents\Gabriel\Estudos\C++\OpenGlStudies\OpenGlRender\x64\Debug\OpenGlRender.exe : fatal error LNK1120: 7 externo não resolvidos
