@@ -1,1 +1,2 @@
 C:\Users\intel\Documents\Gabriel\Estudos\C++\OpenGlStudies\OpenGlRender\Debug\OpenGlRender.exe
+C:\Users\intel\Documents\Gabriel\Estudos\C++\OpenGlStudies\OpenGlRender\OpenGlRenderer\Debug\OpenGlRender.exe
