@@ -2,6 +2,51 @@
 #include <GLFW/glfw3.h>
 #include<iostream>
 
+#include <fstream> //biblioteca para utilizar outros arquivos
+#include <string>
+#include <sstream>
+
+struct ShaderProgramSource //struct eh um jeito de agrupar variaveis em um único tipo, podendo acessa-las individualmente depois
+{
+    std::string VertexSource;
+    std::string FragmnentSource;
+};
+
+static ShaderProgramSource ParseShader(const std::string& filepath) //Vai transformar o arquivo  com os shaders em strings, separando o vertex do fragment
+{
+    std::ifstream stream(filepath); //da input no arquivo do filepath
+
+    enum class ShaderType //enum que define os valores de cada shader
+    {
+        NONE = -1, VERTEX =0, FRAGMENT = 1
+    };
+
+    std::string line; //linha que vai ser lida
+    std::stringstream ss[2]; //onde vao armazenar as linhas stringstream é uma sequencia de strings juntas em 1
+    ShaderType type = ShaderType::NONE; //seta pro default
+    while (getline(stream, line))
+    {
+        if (line.find("#shader") != std::string::npos) //se achar um #shader e não estiver no fim da linha (o npos significa que está no fim da linha)
+        {
+            if (line.find("vertex") != std::string::npos) //se achar um vertex e não estiver no fim da linhas
+            {
+                //set vertex mode
+                type = ShaderType::VERTEX; //transforma o tipo em vertex
+            }
+            else if (line.find("fragment") != std::string::npos) // se achar um fragment transforma o tipo em fragment
+            {
+                //set fragment mode
+                type = ShaderType::FRAGMENT;
+            }
+        }
+        else
+        {
+            ss[(int)type] << line << '\n'; //ss[(int)type] serve para ver em qual stringstream a linha vai ser adicionada, 
+                                           //se for VERTEX (VERTEX é igual a 0 como está no enum), vai adicionar a linha atual  ao ss[0] , assim organiza os  e separa em vertex e fragment shaders 
+        }
+    }
+    return { ss[0].str(), ss[1].str() }; // retorna o struct, dando o valor de ss[0] (VERTEX) a string VertexSource, e o valor de ss[1] a FragmentSource
+}
 
 static unsigned int CompileShader(unsigned int type, const std::string& source) //compila o shader e verifica se tem algum erro
 {
@@ -99,28 +144,29 @@ int main(void)
                                                                           //Quantos bytes (unidades de memória) ele deve pular até ler o próximo componente sem ser a posição (no caso o tamanho é de 2 floats)
                                                                           //Em qual index começam os componentes(atributos) que deve ler
 
-    std::string vertexShader =                                            //
-        "#version 330 core\n"                                             //
-        "\n"                                                              //
-        "layout(location = 0) in vec4 position;\n"                        //
-        "\n"                                                              //
-        "void main()\n"                                                   //
-        "{\n"                                                             //
-        "   gl_Position = position;\n"                                    //
-        "}\n";                                                            //código do shader, para o vertex
+    //std::string vertexShader =                                            //
+    //    "#version 330 core\n"                                             //
+    //    "\n"                                                              //
+    //    "layout(location = 0) in vec4 position;\n"                        //
+    //    "\n"                                                              //
+    //    "void main()\n"                                                   //
+    //    "{\n"                                                             //
+    //    "   gl_Position = position;\n"                                    //
+    //    "}\n";                                                            //código do shader, para o vertex
 
-    std::string fragmentShader =                                          //
-        "#version 330 core\n"                                             //
-        "\n"                                                              //
-        "layout(location = 0) out vec4 color;\n"                          //
-        "\n"                                                              //
-        "void main()\n"                                                   //
-        "{\n"                                                             //
-        "   color = vec4(1.0, 0.0, 0.0, 1.0);\n"                          //
-        "}\n";                                                            //código do shader, para o fragment
+    //std::string fragmentShader =                                          //
+    //    "#version 330 core\n"                                             //
+    //    "\n"                                                              //
+    //    "layout(location = 0) out vec4 color;\n"                          //
+    //    "\n"                                                              //
+    //    "void main()\n"                                                   //
+    //    "{\n"                                                             //
+    //    "   color = vec4(1.0, 0.0, 0.0, 1.0);\n"                          //
+    //    "}\n";                                                            //código do shader, para o fragment
 
-        unsigned int shader = CreateShader(vertexShader, fragmentShader); // cria o programa de shader levando esseas 2 códigos de shader como strings
-        glUseProgram(shader); // usa esse programa para exibir na tela
+    ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+    unsigned int shader = CreateShader(source.VertexSource, source.FragmnentSource); // cria o programa de shader levando esseas 2 códigos de shader como strings
+    glUseProgram(shader); // usa esse programa para exibir na tela
 
     /* Loop until the user closes the window (Como o Update da unity e o Tick da Unreal)*/
     while (!glfwWindowShouldClose(window))
