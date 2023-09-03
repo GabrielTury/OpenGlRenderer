@@ -6,6 +6,30 @@
 #include <string>
 #include <sstream>
 
+#define ASSERT(x) if(!(x)) __debugbreak(); //macros são definições précompilador, que quando o programa é compilado, elas são substituidas pelas suas definições
+
+#define GLCALL(x)GLClearError();\
+    x;\
+    ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+
+static void GLClearError()  //limpa os error pra n printar repetido
+{
+    while (glGetError() != GL_NO_ERROR)
+    {
+
+    }
+}
+
+static bool GLLogCall(const char* function, const char * file, int line) //informa qual erro eh
+{
+    while (GLenum error = glGetError())
+    {
+        std::cout << "[OpenGl Error] (" << error << "): " << function << " " << file << ": line"<< line << std::endl;
+        return false;
+    }
+    return true;
+}
+
 struct ShaderProgramSource //struct eh um jeito de agrupar variaveis em um único tipo, podendo acessa-las individualmente depois
 {
     std::string VertexSource;
@@ -50,25 +74,25 @@ static ShaderProgramSource ParseShader(const std::string& filepath) //Vai transf
 
 static unsigned int CompileShader(unsigned int type, const std::string& source) //compila o shader e verifica se tem algum erro
 {
-    unsigned int id = glCreateShader(type);
+    GLCALL(unsigned int id = glCreateShader(type));
 
     const char* src = source.c_str();
-    glShaderSource(id, 1, &src, nullptr);
-    glCompileShader(id);
+    GLCALL(glShaderSource(id, 1, &src, nullptr));
+    GLCALL(glCompileShader(id));
 
     //Error Handling
     int result;
-    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+    GLCALL(glGetShaderiv(id, GL_COMPILE_STATUS, &result));
     if (result == GL_FALSE)
     {
         int length;
-        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+        GLCALL(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
         char* message = (char*)alloca(length * sizeof(char));
-        glGetShaderInfoLog(id,length, &length, message);
+        GLCALL(glGetShaderInfoLog(id,length, &length, message));
         std::cout << "Failed to compile" <<(type == GL_VERTEX_SHADER ? "vertex": "fragment") << "Shader!" << std::endl;
         std::cout << message << std::endl;
 
-        glDeleteShader(id);
+        GLCALL(glDeleteShader(id));
         return 0;
     }
 
@@ -77,17 +101,17 @@ static unsigned int CompileShader(unsigned int type, const std::string& source) 
 
 static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader) //Pega os codigos que foram feitos em glsl como string(ver implementação)                                                                                                     //
 {                                                                                                    //e cria um programa opengl com eles, essencialmente junta o vertex com o fragment shader
-    unsigned int program = glCreateProgram();
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
+    GLCALL(unsigned int program = glCreateProgram());
+    GLCALL(unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader));
+    GLCALL(unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader));
 
-    glAttachShader(program, vs);
-    glAttachShader(program, fs); 
-    glLinkProgram(program);
-    glValidateProgram(program); // junta o fragment e vertex shader, cria um programa com eles, e valida esse programa (4 linhas de cima)
+   GLCALL( glAttachShader(program, vs));
+   GLCALL( glAttachShader(program, fs)); 
+   GLCALL( glLinkProgram(program));
+   GLCALL( glValidateProgram(program)); // junta o fragment e vertex shader, cria um programa com eles, e valida esse programa (4 linhas de cima)
 
-    glDeleteShader(vs); 
-    glDeleteShader(fs); //essas 2 linhas deletam o shader pois ja foram criados e juntados em um programa
+    GLCALL(glDeleteShader(vs)); 
+    GLCALL(glDeleteShader(fs)); //essas 2 linhas deletam o shader pois ja foram criados e juntados em um programa
 
     return program; // retorna o programa do shader
 }
@@ -137,13 +161,13 @@ int main(void)
     };
 
     unsigned int buffer;
-    glGenBuffers(1, &buffer /* o & faz passar o endereço de memória do buffer ao invés do valor do int */);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);//Bind buffer deixa o buffer selecionado como "ativo" e eh oq vai ser usado pelo openGL, funciona como as layers do photoshop, o programa soh altera a layer selecionada
-    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float),positions,GL_STATIC_DRAW); /*seta o buffer para ter as informações dos vertices do array triangleVertex e seta como statico
+    GLCALL(glGenBuffers(1, &buffer /* o & faz passar o endereço de memória do buffer ao invés do valor do int */));
+    GLCALL(glBindBuffer(GL_ARRAY_BUFFER, buffer));//Bind buffer deixa o buffer selecionado como "ativo" e eh oq vai ser usado pelo openGL, funciona como as layers do photoshop, o programa soh altera a layer selecionada
+    GLCALL(glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float),positions,GL_STATIC_DRAW)); /*seta o buffer para ter as informações dos vertices do array triangleVertex e seta como statico
                                                                                       e avisa que vai usa-lo para criar algo (desenhar)*/
 
-    glEnableVertexAttribArray(0); //habilita a atribuição do array (linha abaixo)
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);//Essa linha informa para o openGl, como deve ler o array de vertices criadoe bindado(bound)
+    GLCALL(glEnableVertexAttribArray(0)); //habilita a atribuição do array (linha abaixo)
+    GLCALL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));//Essa linha informa para o openGl, como deve ler o array de vertices criadoe bindado(bound)
                                                                           //fala em qual indice deve começar no caso 0 (o primeiro)
                                                                           //O numero de componentes por vertice (no caso 2 floats por vertice
                                                                           //O tipo dos componentes do array
@@ -152,9 +176,9 @@ int main(void)
                                                                           //Em qual index começam os componentes(atributos) que deve ler
 
     unsigned int ibo; //ibo = index buffer object
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW); //cria um buffer com os vertices que serão usados (positions define o vértices, e o indices quais serão usados)
+    GLCALL(glGenBuffers(1, &ibo));
+    GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+    GLCALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW)); //cria um buffer com os vertices que serão usados (positions define o vértices, e o indices quais serão usados)
 
 
     //std::string vertexShader =                                            //
@@ -179,15 +203,17 @@ int main(void)
 
     ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
     unsigned int shader = CreateShader(source.VertexSource, source.FragmnentSource); // cria o programa de shader levando esseas 2 códigos de shader como strings
-    glUseProgram(shader); // usa esse programa para exibir na tela
+    GLCALL(glUseProgram(shader)); // usa esse programa para exibir na tela
 
     /* Loop until the user closes the window (Como o Update da unity e o Tick da Unreal)*/
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
+        
+        GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+        
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         
         /*//Legacy openGl
         glBegin(GL_TRIANGLES);
@@ -204,7 +230,7 @@ int main(void)
         glfwPollEvents();
     }
 
-    glDeleteProgram(shader); // deleta o programa depois do uso (uso sendo a tela fechar)
+    GLCALL(glDeleteProgram(shader)); // deleta o programa depois do uso (uso sendo a tela fechar)
 
     glfwTerminate();
     return 0;
