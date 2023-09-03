@@ -122,17 +122,24 @@ int main(void)
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
-    float positions[6] =
+    float positions[] =
     {
-        -0.5f,-0.5f,
-         0.0f, 0.5f,
-         0.5f, -0.5f
+        -0.5f,-0.5f, //0
+         0.5f, -0.5f, //1
+         0.5f, 0.5f, //2
+        -0.5f, 0.5f //3
+    };
+
+    unsigned int indices[] = //array que vai guardar quais vertices serão usados (para não ter q repetir a posição no positions
+    {
+        0, 1, 2,
+        2, 3, 0
     };
 
     unsigned int buffer;
     glGenBuffers(1, &buffer /* o & faz passar o endereço de memória do buffer ao invés do valor do int */);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);//Bind buffer deixa o buffer selecionado como "ativo" e eh oq vai ser usado pelo openGL, funciona como as layers do photoshop, o programa soh altera a layer selecionada
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float),positions,GL_STATIC_DRAW); /*seta o buffer para ter as informações dos vertices do array triangleVertex e seta como statico
+    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float),positions,GL_STATIC_DRAW); /*seta o buffer para ter as informações dos vertices do array triangleVertex e seta como statico
                                                                                       e avisa que vai usa-lo para criar algo (desenhar)*/
 
     glEnableVertexAttribArray(0); //habilita a atribuição do array (linha abaixo)
@@ -143,6 +150,12 @@ int main(void)
                                                                           //Se ele deve ser normalizado ou n (floats ja são normalizados)
                                                                           //Quantos bytes (unidades de memória) ele deve pular até ler o próximo componente sem ser a posição (no caso o tamanho é de 2 floats)
                                                                           //Em qual index começam os componentes(atributos) que deve ler
+
+    unsigned int ibo; //ibo = index buffer object
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW); //cria um buffer com os vertices que serão usados (positions define o vértices, e o indices quais serão usados)
+
 
     //std::string vertexShader =                                            //
     //    "#version 330 core\n"                                             //
@@ -174,7 +187,8 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        
         /*//Legacy openGl
         glBegin(GL_TRIANGLES);
         glVertex2f(-0.5f,-0.5f);
