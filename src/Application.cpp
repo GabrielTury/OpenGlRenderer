@@ -138,6 +138,8 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    glfwSwapInterval(1); //muda a framerate
+
     //Starta a library glew que tem ponteiros para as funções do openGl que estão nos drives da placa de video
     if (glewInit() != GLEW_OK)
     {
@@ -205,16 +207,35 @@ int main(void)
     unsigned int shader = CreateShader(source.VertexSource, source.FragmnentSource); // cria o programa de shader levando esseas 2 códigos de shader como strings
     GLCALL(glUseProgram(shader)); // usa esse programa para exibir na tela
 
+    int location = glGetUniformLocation(shader, "u_Color"); // pega o local (id) da nossa variavel uniforme
+    ASSERT(location != -1);
+    GLCALL(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f)); //seta o uniform para os valores na função
+
+    float r = 0.0f;
+    float increment = 0.05f;
+
     /* Loop until the user closes the window (Como o Update da unity e o Tick da Unreal)*/
-    while (!glfwWindowShouldClose(window))
-    {
+while (!glfwWindowShouldClose(window))
+{
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
         
+
+        GLCALL(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+
         GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
         
-
+        if (r > 1.0f)
+        {
+            increment = -0.05f;
+        }
+        else if (r < 0.0f)
+        {
+            increment = 0.05f;
+        }
         
+        r += increment;
+
         /*//Legacy openGl
         glBegin(GL_TRIANGLES);
         glVertex2f(-0.5f,-0.5f);
@@ -223,15 +244,16 @@ int main(void)
         glEnd();*/
 
 
+
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
         /* Poll for and process events */
         glfwPollEvents();
-    }
+}
 
     GLCALL(glDeleteProgram(shader)); // deleta o programa depois do uso (uso sendo a tela fechar)
 
     glfwTerminate();
     return 0;
-}
+ }
