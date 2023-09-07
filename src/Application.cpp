@@ -125,7 +125,9 @@ int main(void)
     if (!glfwInit())
         return -1;
     
-
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
@@ -162,10 +164,14 @@ int main(void)
         2, 3, 0
     };
 
+    unsigned int vao;
+    GLCALL(glGenVertexArrays(1, &vao));
+    GLCALL(glBindVertexArray(vao)); //arraay com os vertex buffers
+
     unsigned int buffer;
     GLCALL(glGenBuffers(1, &buffer /* o & faz passar o endereço de memória do buffer ao invés do valor do int */));
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, buffer));//Bind buffer deixa o buffer selecionado como "ativo" e eh oq vai ser usado pelo openGL, funciona como as layers do photoshop, o programa soh altera a layer selecionada
-    GLCALL(glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float),positions,GL_STATIC_DRAW)); /*seta o buffer para ter as informações dos vertices do array triangleVertex e seta como statico
+    GLCALL(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float),positions,GL_STATIC_DRAW)); /*seta o buffer para ter as informações dos vertices do array triangleVertex e seta como statico
                                                                                       e avisa que vai usa-lo para criar algo (desenhar)*/
 
     GLCALL(glEnableVertexAttribArray(0)); //habilita a atribuição do array (linha abaixo)
@@ -207,7 +213,7 @@ int main(void)
     unsigned int shader = CreateShader(source.VertexSource, source.FragmnentSource); // cria o programa de shader levando esseas 2 códigos de shader como strings
     GLCALL(glUseProgram(shader)); // usa esse programa para exibir na tela
 
-    int location = glGetUniformLocation(shader, "u_Color"); // pega o local (id) da nossa variavel uniforme
+    GLCALL(int location = glGetUniformLocation(shader, "u_Color")); // pega o local (id) da nossa variavel uniforme
     ASSERT(location != -1);
     GLCALL(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f)); //seta o uniform para os valores na função
 
@@ -220,8 +226,11 @@ while (!glfwWindowShouldClose(window))
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
         
-
+        GLCALL(glUseProgram(shader));
         GLCALL(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+
+        GLCALL(glBindVertexArray(vao));
+        GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
 
         GLCALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
         
